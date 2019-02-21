@@ -12,6 +12,7 @@
 +$  card
   $%  [%poke wire dock poke]
       [%peer wire dock path]
+      [%pull wire dock ~]
       [%diff diff]
       [%hiss wire [~ ~] %httr %hiss hiss]
   ==
@@ -33,31 +34,14 @@
       token=@t
       king=@p
       baseurl=@t
-      ::  names and configs of all circles we know about
+      ::  names, configs, and last read of all circles we know about
       ::
-      circles=(map circle:hall (unit config:hall))
-      ::  names and last read message of all circles we know about
-      ::
-      sequence=(map circle:hall @)
-      ::  names of all circles we own
-      ::
-      our-circles=(set name:hall)
-  ==
-::
-+$  prize
-  $:  ::  names and configs of all circles we know about
-      ::
-      circles=(map circle:hall (unit config:hall))
-      ::  names and last read message of all circles we know about
-      ::
-      sequence=(map circle:hall @)
-      ::  names of all circles we own
-      ::
-      our-circles=(set name:hall)
+      circles=(map name:hall @)
   ==
 ::
 +$  notification
-  $:  topic=@t
+  $:  token=@t
+      topic=@t
       payload=(map @t json)
   ==
 +$  action
@@ -65,5 +49,7 @@
       [%king kng=@p]
       [%baseurl bur=@t]
       [%notify not=notification]
+      [%add-circle nom=name:hall]
+      [%del-circle nom=name:hall]
   ==
 --

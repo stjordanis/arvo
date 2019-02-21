@@ -23,18 +23,24 @@
   |=  old=(unit state)
   ^-  (quip move _this)
   ?~  old
-    :_  this  ~
-::      :~  [ost.bol %peer /circles [our.bol %hall] /circles/[(scot %p our.bol)]]
-::          [ost.bol %peer /inbox [our.bol %hall] /circle/inbox/config/grams]
-::      ==
+    :_  this(king.tie.sta.this ~bus)  ~
   ?-    -.u.old
       %0
     :_  this  ~
   ==
+::
+::  +poke-noun: debugging
+::
 ++  poke-noun
   |=  act=action
   ^-  (quip move _this)
   (poke-tiebout-action act)
+::
+::
+::
+
+::  +poke-json: action handler for web events
+
 ::
 ::  +poke-tiebout-action: main action handler
 ::
@@ -49,18 +55,36 @@
       (set-token +.act)
     $baseurl
       (set-baseurl +.act)
+    $add-circle
+      (add-circle +.act)
+    $del-circle
+      (del-circle +.act)
     $notify
       (send-notify +.act)
   ==
+::
+::  +add-circle: add circle and subscribe for updates
+::
+++  add-circle
+  |=  nom=name:hall
+  ^-  (quip move _this)
+  :_  this(circles.tie.sta (~(put by circles.tie.sta.this) nom 0))
+  [ost.bol %peer /our/[nom] [our.bol %hall] /circle/[nom]/config]~
+::
+::  +del-circle: delete circle and unsubscribe from updates
+::
+++  del-circle
+  |=  nom=name:hall
+  ^-  (quip move _this)
+  :_  this(circles.tie.sta (~(del by circles.tie.sta.this) nom))
+  [ost.bol %pull /our/[nom] [our.bol %hall] ~]~
 ::
 ::  +set-king: set king @p
 ::
 ++  set-king
   |=  kng=@p
   ^-  (quip move _this)
-  =/  newtie  tie.sta.this(king kng)
-  =/  newstate  sta.this(tie newtie)
-  :_  this(sta newstate)  ~
+  :_  this(king.tie.sta kng)  ~
 ::
 ::  +set-token: set token @t
 ::
@@ -95,7 +119,7 @@
 ++  create-hiss
   |=  not=notification
   ^-  hiss
-  =/  furl=@t  (crip (weld (trip baseurl.tie.sta) (trip token.tie.sta)))
+  =/  furl=@t  (crip (weld (trip baseurl.tie.sta) (trip token.not)))
   =/  url=purl  (need (de-purl:html furl))
   =/  jon=json  :-  %o  %-  my  :~
     aps+o+payload.not
@@ -105,81 +129,80 @@
     apns-topic+[topic.not ~]  :: generate map from raw noun
   ==
   (some (as-octt:mimes:html (en-json:html jon)))
+::
+::  +diff-hall-prize:
+::
+++  diff-hall-prize
+  |=  [wir=wire piz=prize:hall]
+  ^-  (quip move _this)
+  ~&  prize+[wir piz]
+  ?~  wir
+    (mean [leaf+"invalid wire for diff: {(spud wir)}"]~)
+  ?+  wir
+    (mean [leaf+"invalid wire for diff: {(spud wir)}"]~)
+  ::
+  ::  %our: set config of circle and iterate through messages, sending
+  ::  notifications for all messages where number is higher than our last-read
+  ::
+      {%our @ @}
+    ?>  ?=(%circle -.piz)
+    =/  nom/name:hall  i.t.wir
+    =/  red/@ud  red.loc.cos.piz
+    :_  this(circles.tie.sta (~(put by circles.tie.sta.this) nom red))  ~
+  ==
 
+++  helper
+  |=  [red=@ud env=envelope:hall]
+  ^-  (list move)
+  ~&  env
+  =/  pay  %-  my  :~
+    alert+s+'New message'
+  ==
+  =/  not/notification  :+
+    token.tie.sta
+    'com.tlon.urbit-client'
+    pay
+  ?:  (gth num.env red)
+    [ost.bol %poke /me [our.bol dap.bol] [%tiebout-action [%notify not]]]~
+  ~
+::
+::  +diff-hall-rumor:
+::
+++  diff-hall-rumor
+  |=  [wir=wire rum=rumor:hall]
+  ^-  (quip move _this)
+  ~&  rumor+[wir rum]
+  ?~  wir
+    (mean [leaf+"invalid wire for diff: {(spud wir)}"]~)
+  ?+  wir
+    (mean [leaf+"invalid wire for diff: {(spud wir)}"]~)
+  ::
+  ::  %our: set config of circle and iterate through messages, sending
+  ::  notifications for all messages where number is higher than our last-read
+  ::
+      {%our @ @}
+    ?>  ?=(%circle -.rum)
+    =/  nom/name:hall  i.t.wir
+    ::  get new read number if possible from config change
+    ::  if not a read event, then use previous read number
+    ::  then, generate a list of moves based on the messages in the rumor
+    ::  that are higher in number than the read number
+    ?+  -.rum.rum
+      :_  this  ~
+      %gram
+    =/  red/@  (need (~(get by circles.tie.sta.this) nom))
+    ?:  (gth num.nev.rum.rum red)
+      :_  this(circles.tie.sta (~(put by circles.tie.sta.this) nom red))
+      (helper red nev.rum.rum) 
+    :_  this
+    (helper red nev.rum.rum)
+      %config
+    ?+  -.dif.rum.rum
+      [~ this]
+          %read
+        =/  red/@ud  red.dif.rum.rum
+        :_  this(circles.tie.sta (~(put by circles.tie.sta.this) nom red))  ~
+      ==
+    ==
+  ==
 --
-::  +coup: recieve acknowledgement for poke, print error if it failed
-::
-::++  coup
-::  |=  [wir=wire err=(unit tang)]
-::  ^-  (quip move _this)
-::  ?~  err
-::    [~ this]
-::  (mean u.err)
-::
-::  +sigh-httr: receive result of http request
-::
-::++  sigh-httr
-::  |=  [wir=wire code=@ud headers=mess:eyre body=(unit octs)]
-::  ^-  [(list move) _this]
-::  ?:  &((gte code 200) (lth code 300))
-::    ~&  [%all-is-well code]
-::    ~&  [%headers headers]
-::    ~&  [%body body]
-::    [~ this]
-::  ~&  [%we-have-a-problem code]
-::  ~&  [%headers headers]
-::  ~&  [%body body]
-::  [~ this]
-::
-::  +reap: recieve acknowledgement for peer, retry on failure
-::
-::++  reap
-::  |=  [wir=wire err=(unit tang)]
-::  ^-  (quip move _this)
-::  ::~&  reap+[wir =(~ err)]
-::  ?~  err
-::    ::  XX send message to users inbox
-::    [~ this]
-::  ?~  wir
-::    (mean [leaf+"invalid wire for diff: {(spud wir)}"]~)
-::  ?+  i.wir
-::    (mean [leaf+"invalid wire for diff: {(spud wir)}"]~)
-::  ::
-::      %circles
-::    :_  this
-::    [ost.bol %peer /circles [our.bol %hall] /circles/[(scot %p our.bol)]]~
-::  ::
-::      %inbox
-::    :_  this
-::    [ost.bol %peer /inbox [our.bol %hall] /circle/inbox/config/grams]~
-::  ::
-::      %our
-::    ?<  ?=(~ t.wir)
-::    :_  this
-::    [ost.bol %peer /our/[i.t.wir] [our.bol %hall] /circle/[i.t.wir]/config]~
-::  ==
-::::
-::::  +quit:
-::::
-::++  quit
-::  |=  wir=wire
-::  ^-  (quip move _this)
-::  ?~  wir
-::    (mean [leaf+"invalid wire for diff: {(spud wir)}"]~)
-::  ?+  i.wir
-::    (mean [leaf+"invalid wire for diff: {(spud wir)}"]~)
-::  ::
-::      %circles
-::    :_  this
-::    [ost.bol %peer /circles [our.bol %hall] /circles/[(scot %p our.bol)]]~
-::  ::
-::      %inbox
-::    :_  this
-::    [ost.bol %peer /inbox [our.bol %hall] /circle/inbox/config/grams]~
-::  ::
-::      %our
-::    ?<  ?=(~ t.wir)
-::    :_  this
-::    [ost.bol %peer /our/[i.t.wir] [our.bol %hall] /circle/[i.t.wir]/config]~
-::  ==
-

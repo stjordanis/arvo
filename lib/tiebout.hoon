@@ -1,10 +1,10 @@
 ::
-::::  /hoon/tiebout/lib
+::::  /lib/tiebout/hoon
   ::
 /?  309
 /-  hall
 =,  eyre
-:: ::
+::
 ~%  %tiebout-lib  ..is  ~
 |%
 +$  move  [bone card]
@@ -19,6 +19,7 @@
 ::
 +$  diff
   $%  [%hall-rumor rumor:hall]
+      [%tiebout-action action]
   ==
 ::
 +$  poke
@@ -34,7 +35,7 @@
       token=@t
       king=@p
       baseurl=@t
-      ::  names, configs, and last read of all circles we know about
+      ::  name and last read
       ::
       circles=(map name:hall @)
   ==
@@ -44,6 +45,7 @@
       topic=@t
       payload=(map @t json)
   ==
+::
 +$  action
   $%  [%token tok=@t]
       [%king kng=@p]
@@ -52,4 +54,5 @@
       [%add-circle nom=name:hall]
       [%del-circle nom=name:hall]
   ==
+::
 --
